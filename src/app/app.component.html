@@ -1,5 +1,16 @@
 <div>
   <h1>Hello!</h1>
-  <div>{{ some$ | async | json }}</div>
+  <div>{{ some$ | async }}</div>
+
+  <button (click)="getStation()">Get stations</button>
+
+  <button (click)="getRoute()">Get routes</button>
+
+
+  <button (click)="search()">Search</button>
+
+  <button (click)="create()">Create Station</button>
+  <button (click)="login()">Login</button>
+  <button (click)="profile()">Profile</button>
 </div>
 <router-outlet />

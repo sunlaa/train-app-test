@@ -11,21 +11,43 @@ import { Observable, of } from 'rxjs';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   title = 'train-app';
 
   testService: TestService = inject(TestService);
 
   some$: Observable<Object> = of({});
 
-  ngOnInit() {
-    this.testService.searchSome().subscribe(
+  constructor() {
+    localStorage.clear();
+  }
+
+  getStation() {
+    this.testService.getStation().subscribe();
+  }
+
+  getRoute() {
+    this.testService.getRoutes().subscribe();
+  }
+
+  search() {
+    this.testService.searchSome().subscribe();
+  }
+
+  create() {
+    this.testService.createStation().subscribe(
       (data) => {
-        console.log('Search results:', data);
+        console.log(data);
       },
-      (error) => {
-        console.error('Error during train search:', error);
-      }
+      (err) => console.log(err)
     );
+  }
+
+  login() {
+    this.testService.loginAdmin().subscribe();
+  }
+
+  profile() {
+    this.testService.getProfileData().subscribe();
   }
 }

@@ -54,6 +54,34 @@ interface Segment {
   time: string[];
 }
 
+interface Filter {
+  firstAvailableDate: Date;
+  lastAvailableDate: Date;
+}
+
+interface Ticket {
+  departureDate: Date;
+  arrivalDate: Date;
+  startCity: string;
+  endCity: string;
+  tripDuaration: number;
+  firstRouteStation: string;
+  lastRouteStation: string;
+  price?: {
+    [key: string]: {
+      freeSeats: number;
+      price: number;
+    };
+  };
+}
+
+interface RouteDetails {
+  station: string;
+  arrivalTime: string | undefined;
+  departureTime: string | undefined;
+  stopDuration: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -65,7 +93,7 @@ export class TestService {
   getStation() {
     return this.http.get<Station[]>('/api/station').pipe(
       map((data) => {
-        return data.find((elem) => elem.id === 112);
+        return data.find((elem) => elem.id === 5);
       }),
       tap((data) => {
         console.log(data);
@@ -82,14 +110,14 @@ export class TestService {
   }
 
   searchSome() {
-    const date = new Date(2024, 8, 27, 12).toISOString();
+    const date = new Date(2024, 7, 27, 12).toISOString();
     console.log(date);
 
     const params = {
-      fromLatitude: 53.597204803371056,
-      fromLongitude: -28.57250258982822,
-      toLatitude: 84.87996460407012,
-      toLongitude: 171.1223311508151,
+      fromLatitude: -48.9776163077342,
+      fromLongitude: -119.6638479136875,
+      toLatitude: -45.87343039781251,
+      toLongitude: 94.28725055293404,
       time: date,
     };
 
@@ -101,53 +129,55 @@ export class TestService {
     );
   }
 
+  toTimestamp(iso: string) {
+    return new Date(iso).getTime();
+  }
+
   handleRoutes(response: SearchResponse) {
     const routes = response.routes;
     const from = response.from.stationId;
     const to = response.to.stationId;
 
-    routes.map((route) => {
-      const startIndex = route.path.indexOf(from);
-      const endIndex = route.path.indexOf(to);
+    const startCity = response.from.city;
+    const endCity = response.to.city;
 
-      route.schedule.map((ride) => {
-        const wholePath = ride.segments.slice(startIndex, endIndex + 1);
-        const startTime = new Date(wholePath[0].time[0]).getTime();
-        const endTime = new Date(
-          wholePath[wholePath.length - 1].time[1]
-        ).getTime();
+    let filterData: Filter;
+    const ticketsData: Ticket[] = [];
 
-        const travelTime = this.convertTimestamp(endTime - startTime);
+    routes.forEach((route) => {
+      const firstRouteStationId = route.path[0];
+      const lastRouteStationId = route.path[route.path.length - 1];
 
-        const pathWithCities = wholePath.map((segment, i) => {
-          return { ...segment, stationId: route.path[i] };
-        });
+      const startRide = route.path.indexOf(from);
+      const endRide = route.path.indexOf(to);
 
-        let lastDeaprture: number | undefined;
-        const routeDetails = pathWithCities.map((segment, i) => {
-          const arrival = new Date(segment.time[0]).getTime();
-          const stopTime =
-            lastDeaprture === undefined
-              ? 'station'
-              : `${this.convertTimestamp(arrival - lastDeaprture).min} min`;
-          const departure = new Date(segment.time[1]).getTime();
-          lastDeaprture = departure;
+      const rides = route.schedule;
 
-          return {
-            cityId: segment.stationId,
-            arrival: i === 0 ? undefined : this.formatTime(arrival),
-            departure:
-              i === pathWithCities.length - 1
-                ? undefined
-                : this.formatTime(departure),
+      rides.forEach((ride) => {
+        const wholePath = ride.segments.slice(startRide, endRide + 1);
 
-            stopTime,
+        const departureDate = new Date(wholePath[0].time[0]);
+        const arrivalDate = new Date(wholePath[wholePath.length - 1].time[1]);
+        const tripDuaration = arrivalDate.getTime() - departureDate.getTime();
+
+        wholePath.forEach((segment) => {
+          const price = segment.price;
+
+          const result: Ticket = {
+            departureDate,
+            arrivalDate,
+            startCity,
+            endCity,
+            tripDuaration,
+            firstRouteStation: `${firstRouteStationId}`,
+            lastRouteStation: `${lastRouteStationId}`,
           };
-        });
 
-        console.log(routeDetails);
+          ticketsData.push(result);
+        });
       });
     });
+    console.log(ticketsData);
   }
 
   convertTimestamp(ms: number) {

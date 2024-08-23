@@ -50,4 +50,24 @@ export class AppComponent {
   profile() {
     this.testService.getProfileData().subscribe();
   }
+
+  carriage() {
+    this.testService.getCarriage().subscribe();
+  }
+
+  orders() {
+    this.testService.getOrders().subscribe();
+  }
+
+  postOrders() {
+    this.testService.makeOrder().subscribe();
+  }
+
+  signup() {
+    this.testService.registerUser().subscribe();
+  }
+
+  signin() {
+    this.testService.loginUser().subscribe();
+  }
 }

@@ -93,7 +93,7 @@ export class TestService {
   getStation() {
     return this.http.get<Station[]>('/api/station').pipe(
       map((data) => {
-        return data.find((elem) => elem.id === 5);
+        return data.find((elem) => elem.id === 92);
       }),
       tap((data) => {
         console.log(data);
@@ -109,15 +109,31 @@ export class TestService {
     );
   }
 
+  getCarriage() {
+    return this.http.get('/api/carriage').pipe(
+      tap((data) => {
+        console.log(data);
+      })
+    );
+  }
+
   searchSome() {
     const date = new Date(2024, 7, 27, 12).toISOString();
     console.log(date);
 
+    // const params = {
+    //   fromLatitude: -48.9776163077342,
+    //   fromLongitude: -119.6638479136875,
+    //   toLatitude: -45.87343039781251,
+    //   toLongitude: 94.28725055293404,
+    //   time: date,
+    // };
+
     const params = {
-      fromLatitude: -48.9776163077342,
-      fromLongitude: -119.6638479136875,
-      toLatitude: -45.87343039781251,
-      toLongitude: 94.28725055293404,
+      fromLatitude: 53.59595202548519,
+      fromLongitude: 101.990273414809,
+      toLatitude: 77.278899529396,
+      toLongitude: 100.08084407927123,
       time: date,
     };
 
@@ -180,28 +196,21 @@ export class TestService {
     console.log(ticketsData);
   }
 
-  convertTimestamp(ms: number) {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    const remainingHours = hours % 24;
-    const remainingMinutes = minutes % 60;
-
-    return { days, hours: remainingHours, min: remainingMinutes };
+  getOrders() {
+    return this.http.get('/api/order').pipe(
+      tap((data) => {
+        console.log(data);
+      })
+    );
   }
 
-  formatTime(num: number) {
-    const date = new Date(num);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-
-    // Добавляем ведущий ноль для чисел меньше 10
-    const formattedHours = hours.toString().padStart(2, '0');
-    const formattedMinutes = minutes.toString().padStart(2, '0');
-
-    return `${formattedHours}:${formattedMinutes}`;
+  makeOrder() {
+    const body = { rideId: 68, seat: 3, stationStart: 44, stationEnd: 26 };
+    return this.http.post('/api/order', body).pipe(
+      tap((data) => {
+        console.log(data);
+      })
+    );
   }
 
   createStation() {
@@ -219,6 +228,35 @@ export class TestService {
     const body = {
       email: 'admin@admin.com',
       password: 'my-password',
+    };
+
+    return this.http.post<{ token: string }>('/api/signin', body).pipe(
+      map(({ token }) => {
+        localStorage.setItem('token', token);
+      }),
+      tap((data) => {
+        console.log(data);
+      })
+    );
+  }
+
+  registerUser() {
+    const body = {
+      email: 'test.hello@gmail.com',
+      password: 'password',
+    };
+
+    return this.http.post('/api/signup', body).pipe(
+      tap((data) => {
+        console.log(data);
+      })
+    );
+  }
+
+  loginUser() {
+    const body = {
+      email: 'test.hello@gmail.com',
+      password: 'password',
     };
 
     return this.http.post<{ token: string }>('/api/signin', body).pipe(

@@ -35,10 +35,15 @@ interface Filter {
 }
 
 interface RouteDetails {
+  routeId: number;
+  stopInfo: StopInfo[];
+}
+
+interface StopInfo {
   station: string;
-  arrivalTime: string | undefined;
   departureTime: string | undefined;
-  stopDuration: string;
+  arrivalTime: string | undefined;
+  duration: number | 'first station' | 'last station';
 }
 
 export type SearchResponse = {
@@ -81,6 +86,7 @@ export type Ticket = {
   lastRouteStation: string;
   // temporarily
   price?: { [key: string]: number };
+  routeDetails: RouteDetails;
 };
 
 export type DayTickets = {
@@ -126,7 +132,7 @@ export class TestService {
   }
 
   searchSome() {
-    const date = new Date(2024, 7, 25, 12).toISOString();
+    const date = new Date(2024, 7, 26, 12).toISOString();
     console.log(date);
 
     const params = {
@@ -148,7 +154,7 @@ export class TestService {
     return this.http.get<SearchResponse>('/api/search', { params }).pipe(
       tap((data) => {
         console.log(data);
-        // this.filterTicketsByDate(this.getTicketsData(data));
+        this.filterTicketsByDate(this.getTicketsData(data));
       })
     );
   }
@@ -160,6 +166,8 @@ export class TestService {
 
     const ticketsData: Ticket[] = routes.flatMap((route) => {
       // change to the city string using selectors
+      const { id } = route;
+
       const firstRouteStationId = route.path[0];
       const lastRouteStationId = route.path[route.path.length - 1];
 
@@ -167,13 +175,17 @@ export class TestService {
       const endRide = route.path.indexOf(toStationId);
 
       return route.schedule.map((ride) => {
+        const wholePathIds = route.path.slice(startRide, endRide + 1);
+
         const wholePath = ride.segments.slice(startRide, endRide + 1);
 
         const departureDate = new Date(wholePath[0].time[0]);
         const arrivalDate = new Date(wholePath[wholePath.length - 1].time[1]);
         const tripDuration = arrivalDate.getTime() - departureDate.getTime();
 
-        return {
+        const stopInfo = handleRoute(wholePathIds, wholePath);
+
+        const ticket: Ticket = {
           departureDate: departureDate.toISOString(),
           arrivalDate: arrivalDate.toISOString(),
           startCity,
@@ -181,7 +193,10 @@ export class TestService {
           tripDuration,
           firstRouteStation: `${firstRouteStationId}`,
           lastRouteStation: `${lastRouteStationId}`,
+          routeDetails: { routeId: id, stopInfo },
         };
+
+        return ticket;
       });
     });
 
@@ -254,7 +269,7 @@ export class TestService {
       relations: [1, 2, 3],
     };
 
-    return this.http.post('/api/station', createStationBody);
+    return this.http.post('/api/station/1138', createStationBody);
   }
 
   loginAdmin() {
@@ -345,4 +360,25 @@ function hundleCarriageSeats(
   occupiedSeats: number[]
 ) {
   const seatsNumber = carriages.map((car) => cars[car]);
+}
+
+function handleRoute(ridePath: number[], segmentPath: Segment[]) {
+  let prevArrival: string;
+
+  return segmentPath.map((segment, i) => {
+    const stationId = ridePath[i];
+    const departureTime = segment.time[0];
+    const arrivalTime = prevArrival;
+    const duration =
+      new Date(departureTime).getTime() - new Date(arrivalTime).getTime();
+
+    prevArrival = segment.time[1];
+
+    return {
+      station: `${stationId}`,
+      departureTime,
+      arrivalTime,
+      duration,
+    };
+  });
 }

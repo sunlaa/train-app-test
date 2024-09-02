@@ -135,23 +135,23 @@ export class TestService {
     const date = new Date(2024, 7, 26, 12).toISOString();
     console.log(date);
 
-    const params = {
-      fromLatitude: -48.9776163077342,
-      fromLongitude: -119.6638479136875,
-      toLatitude: -45.87343039781251,
-      toLongitude: 94.28725055293404,
-      time: date,
-    };
-
     // const params = {
-    //   fromLatitude: 53.59595202548519,
-    //   fromLongitude: 101.990273414809,
-    //   toLatitude: 77.278899529396,
-    //   toLongitude: 100.08084407927123,
+    //   fromLatitude: -48.9776163077342,
+    //   fromLongitude: -119.6638479136875,
+    //   toLatitude: -45.87343039781251,
+    //   toLongitude: 94.28725055293404,
     //   time: date,
     // };
 
-    return this.http.get<SearchResponse>('/api/search', { params }).pipe(
+    const params = {
+      fromLatitude: 53.59595202548519,
+      fromLongitude: 101.990273414809,
+      toLatitude: 77.278899529396,
+      toLongitude: 100.08084407927123,
+      time: '2024-08-30T10:00:00.000Z',
+    };
+
+    return this.http.get<SearchResponse>('/api/search/1').pipe(
       tap((data) => {
         console.log(data);
         this.filterTicketsByDate(this.getTicketsData(data));
@@ -253,7 +253,7 @@ export class TestService {
   }
 
   makeOrder() {
-    const body = { rideId: 68, seat: 3, stationStart: 44, stationEnd: 26 };
+    const body = { rideId: 68, seat: -15, stationStart: 44, stationEnd: 26 };
     return this.http.post('/api/order', body).pipe(
       tap((data) => {
         console.log(data);
@@ -290,7 +290,7 @@ export class TestService {
 
   registerUser() {
     const body = {
-      email: 'test.hello@gmail.com',
+      email: 'test.hello123576@gmail.com',
       password: 'password',
     };
 
@@ -303,7 +303,7 @@ export class TestService {
 
   loginUser() {
     const body = {
-      email: 'test.hello@gmail.com',
+      email: 'test.hello123576@gmail.com',
       password: 'password',
     };
 
